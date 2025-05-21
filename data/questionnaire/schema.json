@@ -1,0 +1,122 @@
+[
+  {
+    "id": 1,
+    "text": "Come ti chiami?",
+    "required": true,
+    "next": 2
+  },
+  {
+    "id": 2,
+    "text": "Quanti anni hai?",
+    "required": true,
+    "next": 3
+  },
+  {
+    "id": 3,
+    "text": "Di dove sei? (es. Italia, Nigeria, Pakistan...)",
+    "required": true,
+    "next": 4
+  },
+  {
+    "id": 4,
+    "text": "In che città o zona lavori?",
+    "required": true,
+    "next": 5
+  },
+  {
+    "id": 5,
+    "text": "Che tipo di lavoro fai? (es. facchino, magazzino, pulizie...)",
+    "required": true,
+    "next": 6
+  },
+  {
+    "id": 6,
+    "text": "Da quanto tempo lavori lì?",
+    "required": true,
+    "next": 7
+  },
+  {
+    "id": 7,
+    "text": "Lavori con un contratto scritto?",
+    "required": true,
+    "next": 8
+  },
+  {
+    "id": 8,
+    "text": "Che tipo di contratto hai? (es. tempo determinato, cooperativa, agenzia...)",
+    "required": true,
+    "next": 9
+  },
+  {
+    "id": 9,
+    "text": "Quante ore lavori ogni giorno?",
+    "required": true,
+    "next": 10
+  },
+  {
+    "id": 10,
+    "text": "Quanti giorni alla settimana lavori?",
+    "required": true,
+    "next": 11
+  },
+  {
+    "id": 11,
+    "text": "A che ora inizi e finisci? (es. 8:00 - 18:00)",
+    "required": true,
+    "next": 12
+  },
+  {
+    "id": 12,
+    "text": "Quante pause fai durante la giornata?",
+    "required": false,
+    "next": 13
+  },
+  {
+    "id": 13,
+    "text": "Quanti euro prendi ogni mese?",
+    "required": true,
+    "next": 14
+  },
+  {
+    "id": 14,
+    "text": "Ricevi lo stipendio con busta paga o in contanti?",
+    "required": true,
+    "next": 15
+  },
+  {
+    "id": 15,
+    "text": "Ti pagano le ore in più se fai straordinari?",
+    "required": true,
+    "next": 16
+  },
+  {
+    "id": 16,
+    "text": "Ti fanno lavorare nei festivi o domeniche?",
+    "required": false,
+    "next": 17
+  },
+  {
+    "id": 17,
+    "text": "Hai diritto alle ferie pagate?",
+    "required": false,
+    "next": 18
+  },
+  {
+    "id": 18,
+    "text": "Ti sei mai infortunato sul lavoro?",
+    "required": false,
+    "next": 19
+  },
+  {
+    "id": 19,
+    "text": "Ti hanno detto se sei coperto da assicurazione o INAIL?",
+    "required": false,
+    "next": 20
+  },
+  {
+    "id": 20,
+    "text": "Vuoi segnalare qualcosa che non abbiamo chiesto?",
+    "required": false,
+    "next": null
+  }
+]
