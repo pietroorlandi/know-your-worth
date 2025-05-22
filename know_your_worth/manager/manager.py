@@ -23,8 +23,8 @@ class WorkflowManager:
         # Simulazione: avvia il workflow
         questionnaire = self.get_questionnaire()
         worker_answers = self.simulate_completion_questionnaire(questionnaire)
-        time.sleep(1)
-        # refinement_data = self.refine_questionnaire(questionnaire, worker_answers) # TODO: attualmente solo una volta lo fa, in futuro possiamo farlo più volte
+        refinement_data = self.refine_questionnaire(questionnaire, worker_answers)  # TODO: attualmente solo una volta lo fa, in futuro possiamo farlo più volte
+        print("refinement_data", refinement_data)
         # if refinement_data["status"] == "incomplete":
         #     worker_answers_refinement = self.simulate_completion_questionnaire(questionnaire)
         #     worker_answers = worker_answers['refinement'] = worker_answers_refinement
@@ -42,6 +42,20 @@ class WorkflowManager:
             return questionnaire_schema
         except Exception as e:
             print("Errore durante il parsing JSON:", e)
+            return {"error": str(e)}
+        
+    def refine_questionnaire(self, questionnaire: dict, user_answers: dict):
+        url = f"{self.flask_questionnaire_url}/refine_questionnaire"
+        payload = {
+            "questionnaire_schema": questionnaire,
+            "user_answers": user_answers
+        }
+        try:
+            response = requests.post(url, json=payload, timeout=10)
+            response.raise_for_status()
+            return response.json()
+        except requests.RequestException as e:
+            print(f"Errore durante la chiamata a {url}: {e}")
             return {"error": str(e)}
 
     def simulate_completion_questionnaire(self, questionnaire):

@@ -1,6 +1,6 @@
 import instructor
-from pydantic import BaseModel
 from openai import OpenAI
+from pydantic import BaseModel
 
 from know_your_worth.llm.llm import LLMClient
 
@@ -12,8 +12,7 @@ class SonarClient(LLMClient):
         self.api_key = api_key
         self.model = model
         self.endpoint = 'https://api.perplexity.ai'
-        self.client = instructor.from_perplexity(OpenAI(base_url=self.endpoint,
-                                                        api_key=self.api_key))
+        self.client = instructor.from_perplexity(OpenAI(api_key=self.api_key, base_url=self.endpoint))
 
     def ask(self, prompt: str, response_model=None) -> str:
         # chat completion without streaming

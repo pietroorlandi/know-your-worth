@@ -1,9 +1,15 @@
 from flask import Flask, request, jsonify
+import os
 
 from questionnaire import get_next_question, load_questionnaire_schema
+from questionnaire_refiner import QuestionnaireRefiner
 from know_your_worth.utils.os_utils import read_yaml_file
+from know_your_worth.llm.sonar_llm import SonarClient
 
 app = Flask(__name__)
+sonar_client = SonarClient(api_key=os.getenv("SONAR_API_KEY"),
+                           model=os.getenv("SONAR_API_MODEL"))
+questionnaire_refiner = QuestionnaireRefiner(llm_client=sonar_client)
 
 
 @app.route('/start_questionnaire', methods=['GET'])
@@ -42,6 +48,30 @@ def get_questionnaire():
     return jsonify({
         "questions": questions
     }), 200
+
+
+@app.route("/refine_questionnaire", methods=["POST"])
+def refine_questionnaire():
+    data = request.get_json()
+    questionnaire_schema = data.get("questionnaire_schema")
+    user_answers = data.get("user_answers")
+    if not questionnaire_schema or not user_answers:
+        return jsonify({"error": "Missing data"}), 400
+    try:
+        result = questionnaire_refiner.refine(questionnaire_schema, user_answers)
+        # Se è un dataclass
+        if hasattr(result, "__dict__"):
+            return jsonify(result.__dict__)
+        # Se è un Pydantic model
+        elif hasattr(result, "dict"):
+            return jsonify(result.dict())
+        # Se è già un dict (es: in caso di errore gestito)
+        elif isinstance(result, dict):
+            return jsonify(result)
+        else:
+            return jsonify({"error": "Unexpected result type"}), 500
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 
 @app.route('/send_questionnaire', methods=['POST'])

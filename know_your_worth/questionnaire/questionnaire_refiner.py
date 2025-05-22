@@ -1,6 +1,7 @@
 import json
 from pydantic import BaseModel, Field
 from typing import List, Union, Literal
+import traceback
 
 
 class CompleteResponse(BaseModel):
@@ -22,10 +23,14 @@ class QuestionnaireRefiner:
     def refine(self, 
                questionnaire_schema: dict,
                user_answers: dict) -> dict:
-        structured = {str(ans["question_id"]): ans["answer"] for ans in user_answers}
+        structured = {
+            str(ans["question_id"]): ans["answer"]
+            for ans in user_answers.get("answers", [])
+        }
         prompt = f"""
         Sei un assistente esperto di diritto del lavoro italiano. 
         Il tuo compito è aiutare un sistema automatico a capire se un lavoratore è sfruttato.
+        Considera che il lavoratore non ha risposte tecniche riguardo al suo CCNL in quanto non è un esperto di diritto del lavoro.
 
         Il sistema ha sottoposto all’utente un questionario con 20 domande. Ecco le domande originali:
 
@@ -50,49 +55,59 @@ class QuestionnaireRefiner:
         """
         try:
             response = self.llm.ask(prompt, response_model=FollowUpResponse)
-            # result = json.loads(response)
             return response
         except Exception as e:
+            print("⚠️ Errore durante la chiamata a llm.ask:")
+            traceback.print_exc()
             return {"error": str(e)}
 
 
 
-# if __name__ == "__main__":
-#     import os
-#     import requests
-#     from know_your_worth.llm.sonar_llm import SonarClient
+def get_questionnaire():
+    url = "http://localhost:5001/get_questionnaire"
+    print(f"Chiamata a: {url}")
+    response = requests.get(url)
+    try:
+        questionnaire_schema = response.json()
+        return questionnaire_schema
+    except Exception as e:
+        print("Errore durante il parsing JSON:", e)
+        return {"error": str(e)}
 
-#     sonar_llm = SonarClient(api_key=os.getenv("SONAR_API_KEY"),
-#                             model=os.getenv("SONAR_API_MODEL"))
-#     questionnaire_refiner = QuestionnaireRefiner(llm_client=sonar_llm)
-#     # Assumendo che il server Flask sia in esecuzione su localhost:5000
-#     BASE_URL = "http://localhost:5000"
+if __name__ == "__main__":
+    import os
+    import requests
+    from know_your_worth.llm.sonar_llm import SonarClient
 
-#     # Ottieni lo schema del questionario dal server Flask
-#     response = requests.get(f"{BASE_URL}/get_questionnaire")
-#     questionnaire_schema = response.json()
+    sonar_llm = SonarClient(api_key=os.getenv("SONAR_API_KEY"),
+                            model=os.getenv("SONAR_API_MODEL"))
+    questionnaire_refiner = QuestionnaireRefiner(llm_client=sonar_llm)
+    # Assumendo che il server Flask sia in esecuzione su localhost:5000
 
-#     # Ottieni le risposte utente dal server Flask
-#     # response = requests.get(f"{BASE_URL}/questionnaire/user_answers")
-#     # user_answers = response.json()
-#     user_answers = {
-#         "answers": [
-#             { "question_id": 1, "answer": "Mario" },
-#             { "question_id": 2, "answer": "30" },
-#             { "question_id": 3, "answer": "Italia" },
-#             { "question_id": 4, "answer": "Milano" },
-#             { "question_id": 5, "answer": "Pulizie" },
-#             { "question_id": 6, "answer": "3 mesi" },
-#             { "question_id": 7, "answer": "Sì" },
-#             { "question_id": 8, "answer": "Agenzia" },
-#             { "question_id": 9, "answer": "9" },
-#             { "question_id": 10, "answer": "6" },
-#             { "question_id": 11, "answer": "07:00 - 17:00" },
-#             { "question_id": 13, "answer": "900" },
-#             { "question_id": 14, "answer": "Contanti" },
-#             { "question_id": 15, "answer": "No"}
-#         ]
-#         }
+    # Ottieni lo schema del questionario dal server Flask
+    questionnaire_schema = get_questionnaire()
 
-#     response = questionnaire_refiner.refine(questionnaire_schema["questions"], user_answers["answers"])
-#     print(response)
+    # Ottieni le risposte utente dal server Flask
+    # response = requests.get(f"{BASE_URL}/questionnaire/user_answers")
+    # user_answers = response.json()
+    user_answers = {
+        "answers": [
+            { "question_id": 1, "answer": "Mario" },
+            { "question_id": 2, "answer": "30" },
+            { "question_id": 3, "answer": "Italia" },
+            { "question_id": 4, "answer": "Milano" },
+            { "question_id": 5, "answer": "Pulizie" },
+            { "question_id": 6, "answer": "3 mesi" },
+            { "question_id": 7, "answer": "Sì" },
+            { "question_id": 8, "answer": "Agenzia" },
+            { "question_id": 9, "answer": "9" },
+            { "question_id": 10, "answer": "6" },
+            { "question_id": 11, "answer": "07:00 - 17:00" },
+            { "question_id": 13, "answer": "900" },
+            { "question_id": 14, "answer": "Contanti" },
+            { "question_id": 15, "answer": "No"}
+        ]
+        }
+
+    # response = questionnaire_refiner.refine(questionnaire_schema["questions"], user_answers["answers"])
+    # print(response)
