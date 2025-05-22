@@ -1,7 +1,7 @@
 from flask import Flask, request, jsonify
 
 from questionnaire import get_next_question, load_questionnaire_schema
-
+from know_your_worth.utils.os_utils import read_yaml_file
 
 app = Flask(__name__)
 
@@ -76,5 +76,7 @@ def send_questionnaire():
     }), 200
 
 
+config = read_yaml_file("configs.yaml")
+
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=True, host=config["flask_questionnaire"]["host"], port=config["flask_questionnaire"]["port"])

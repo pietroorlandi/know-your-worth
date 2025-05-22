@@ -1,0 +1,8 @@
+manager:
+  host: 127.0.0.1
+  port: 5000
+
+flask_questionnaire:
+  host: 127.0.0.1
+  port: 5001
+
