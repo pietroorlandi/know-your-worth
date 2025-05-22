@@ -1,22 +1,29 @@
-import requests
+import instructor
+from pydantic import BaseModel
+from openai import OpenAI
+
 from know_your_worth.llm.llm import LLMClient
 
 
 class SonarClient(LLMClient):
-    def __init__(self, api_key: str):
+    def __init__(self,
+                 api_key: str,
+                 model: str):
         self.api_key = api_key
-        self.endpoint = "https://api.perplexity.ai/sonar"  # fittizio
+        self.model = model
+        self.endpoint = 'https://api.perplexity.ai'
+        self.client = instructor.from_perplexity(OpenAI(base_url=self.endpoint,
+                                                        api_key=self.api_key))
 
-    def ask(self, prompt: str) -> str:
-        headers = {
-            "Authorization": f"Bearer {self.api_key}",
-            "Content-Type": "application/json"
-        }
-        body = {
-            "model": "sonar-small-chat",  # o altro
-            "messages": [{"role": "user", "content": prompt}]
-        }
-
-        response = requests.post(self.endpoint, json=body, headers=headers)
-        response.raise_for_status()
-        return response.json()["choices"][0]["message"]["content"]
+    def ask(self, prompt: str, response_model=None) -> str:
+        # chat completion without streaming
+        messages = [
+            {"role": "system", "content": 'Sei un Assistente AI esperto di diritto del lavoro italiano.'},
+            {"role": "user", "content": prompt}
+        ]
+        response = self.client.chat.completions.create(
+            model=self.model,
+            messages=messages,
+            response_model=response_model
+        )
+        return response
