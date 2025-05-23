@@ -7,6 +7,8 @@ from llama_index.core.ingestion import IngestionPipeline
 import chromadb
 from pathlib import Path
 
+from .perplexity_llm import PerplexityLLM  # Assuming this is the correct import path for your custom LLM
+
 
 class RAGEngine:
     def __init__(self, db_dir: str, collection_name: str, llm_api_key: str, llm_model: str = "sonar-pro"):
@@ -14,7 +16,7 @@ class RAGEngine:
         self.collection_name = collection_name
 
         # Setup global Settings
-        Settings.llm = OpenAI(model=llm_model, api_key=llm_api_key, base_url="https://api.perplexity.ai")
+        Settings.llm = PerplexityLLM(model_name=llm_model, api_key=llm_api_key, )  # OpenAI(model=llm_model, api_key=llm_api_key, base_url="https://api.perplexity.ai")
         Settings.embed_model = HuggingFaceEmbedding(model_name="BAAI/bge-small-en-v1.5")
 
         self.chroma_client = chromadb.PersistentClient(path=str(self.db_dir))
@@ -34,5 +36,7 @@ class RAGEngine:
         pipeline.run(documents=docs)
 
     def query(self, prompt: str, top_k: int = 3):
-        retriever = self.index.as_retriever(similarity_top_k=top_k)
-        return retriever.query(prompt).response
+        # retriever = self.index.as_retriever(similarity_top_k=top_k)
+        query_engine = self.index.as_query_engine()
+        response = query_engine.query(prompt)
+        return response  # retriever.retrieve(prompt)

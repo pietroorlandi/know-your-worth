@@ -18,17 +18,29 @@ class WorkflowManager:
         self.flask_questionnaire_ip = config["flask_questionnaire"]["host"]
         self.flask_questionnaire_port = config["flask_questionnaire"]["port"]
         self.flask_questionnaire_url = f"http://{self.flask_questionnaire_ip}:{self.flask_questionnaire_port}"
+        self.flask_check_exploitation_ip = config["flask_check_exploitation"]["host"]
+        self.flask_check_exploitation_port = config["flask_check_exploitation"]["port"]
+        self.flask_check_exploitation_url = f"http://{self.flask_check_exploitation_ip}:{self.flask_check_exploitation_port}"
 
     def run(self):
         # Simulazione: avvia il workflow
-        questionnaire = self.get_questionnaire()
-        worker_answers = self.simulate_completion_questionnaire(questionnaire)
-        refinement_data = self.refine_questionnaire(questionnaire, worker_answers)  # TODO: attualmente solo una volta lo fa, in futuro possiamo farlo più volte
+        questionnaire_schema = self.get_questionnaire()
+        worker_answers = self.simulate_completion_questionnaire(questionnaire_schema)
+        refinement_data = self.refine_questionnaire(questionnaire_schema, worker_answers)  # TODO: attualmente solo una volta lo fa, in futuro possiamo farlo più volte
         print("refinement_data", refinement_data)
-        # if refinement_data["status"] == "incomplete":
-        #     worker_answers_refinement = self.simulate_completion_questionnaire(questionnaire)
-        #     worker_answers = worker_answers['refinement'] = worker_answers_refinement
-        # self.module_2()
+        follow_up_questions = refinement_data.get("follow_up_questions")
+        follow_up_answers = refinement_data.get("follow_up_answers")
+        if refinement_data.get("status") == "incomplete" and follow_up_questions and follow_up_answers:
+            print("Follow up questions:", follow_up_questions)
+            print("Follow up answers:", follow_up_answers)
+            # Ad esempio, potresti aggiornare worker_info o fare ulteriori chiamate
+        response = self.check_worker_exploitation(
+            questionnaire_schema,
+            worker_answers,
+            follow_up_questions,
+            follow_up_answers
+        )
+        print("Response:", response)
         # self.module_3()
         # self.module_4()
         return {"status": "completed", "worker_info": self.worker_info}
@@ -90,8 +102,26 @@ class WorkflowManager:
             if value is None:
                 self.worker_info[key] = "da compilare"
 
-    def module_2(self):
-        pass
+    def check_worker_exploitation(self,
+                                  questionnaire_schema: dict,
+                                  worker_answers: dict,
+                                  follow_up_questions: list,
+                                  follow_up_answers: list):
+        print("Controllo sfruttamento lavoratore...")
+        url = f"{self.flask_check_exploitation_url}/check_exploitation"
+        payload = {
+            "questionnaire_schema": questionnaire_schema,
+            "worker_answers": worker_answers,
+            'follow_up_questions': follow_up_questions,
+            'follow_up_answers': follow_up_answers
+        }
+        try:
+            response = requests.post(url, json=payload, timeout=30)
+            response.raise_for_status()
+            return response.json()
+        except requests.RequestException as e:
+            print(f"Errore durante la chiamata a {url}: {e}")
+            return {"error": str(e)}
 
     def module_3(self):
         pass

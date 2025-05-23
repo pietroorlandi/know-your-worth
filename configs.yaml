@@ -6,3 +6,6 @@ flask_questionnaire:
   host: 127.0.0.1
   port: 5001
 
+flask_check_exploitation:
+  host: 127.0.0.1
+  port: 5002
