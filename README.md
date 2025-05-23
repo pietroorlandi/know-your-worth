@@ -18,3 +18,5 @@
 - Modular architecture for scalability and maintainability
 
 - Built with accessibility and simplicity in mind (mobile-first)
+
+Developed with Python 3.12.3
