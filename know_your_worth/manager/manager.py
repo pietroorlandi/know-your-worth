@@ -21,6 +21,9 @@ class WorkflowManager:
         self.flask_check_exploitation_ip = config["flask_check_exploitation"]["host"]
         self.flask_check_exploitation_port = config["flask_check_exploitation"]["port"]
         self.flask_check_exploitation_url = f"http://{self.flask_check_exploitation_ip}:{self.flask_check_exploitation_port}"
+        self.flask_generate_advice_ip = config["flask_advice_generator"]["host"]
+        self.flask_generate_advice_port = config["flask_advice_generator"]["port"]
+        self.flask_generate_advice_url = f"http://{self.flask_generate_advice_ip}:{self.flask_generate_advice_port}"
 
     def run(self):
         # Simulazione: avvia il workflow
@@ -39,13 +42,17 @@ class WorkflowManager:
                                                                                            follow_up_questions,
                                                                                            follow_up_answers)
         print("Query for check worker exploitation:", query_for_check_worker_exploitation)
-        response = self.check_worker_exploitation(
-            questionnaire_schema,
-            worker_answers,
-            follow_up_questions,
-            follow_up_answers
-        )
-        print("Response:", response)
+        exploiment_worker_information = self.check_worker_exploitation(questionnaire_schema,
+                                                                        worker_answers,
+                                                                        follow_up_questions,
+                                                                        follow_up_answers)
+        print(f"exploiment_worker_information: {exploiment_worker_information}")
+        generated_advice = self.generate_advice(questionnaire_schema,
+                                                worker_answers,
+                                                follow_up_questions,
+                                                follow_up_answers,
+                                                exploiment_worker_information)
+        print("generated_advice:", generated_advice)
         # self.module_3()
         # self.module_4()
         return {"status": "completed", "worker_info": self.worker_info}
@@ -153,6 +160,30 @@ class WorkflowManager:
             "worker_answers": worker_answers,
             'follow_up_questions': follow_up_questions,
             'follow_up_answers': follow_up_answers
+        }
+        try:
+            response = requests.post(url, json=payload, timeout=30)
+            response.raise_for_status()
+            return response.json()
+        except requests.RequestException as e:
+            print(f"Errore durante la chiamata a {url}: {e}")
+            return {"error": str(e)}
+        
+    def generate_advice(self,
+                        questionnaire_schema: dict,
+                        worker_answers: dict,
+                        follow_up_questions: list,
+                        follow_up_answers: list,
+                        exploiment_worker_information: str
+                        ):
+        print("Sto valutando come consigliare il lavoratore...")
+        url = f"{self.flask_generate_advice_url}/generate_advice"
+        payload = {
+            "questionnaire_schema": questionnaire_schema,
+            "worker_answers": worker_answers,
+            'follow_up_questions': follow_up_questions,
+            'follow_up_answers': follow_up_answers,
+            "exploiment_worker_information": exploiment_worker_information
         }
         try:
             response = requests.post(url, json=payload, timeout=30)
