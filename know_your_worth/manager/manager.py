@@ -34,6 +34,11 @@ class WorkflowManager:
             print("Follow up questions:", follow_up_questions)
             print("Follow up answers:", follow_up_answers)
             # Ad esempio, potresti aggiornare worker_info o fare ulteriori chiamate
+        query_for_check_worker_exploitation = self.get_query_for_check_worker_exploitation(questionnaire_schema,
+                                                                                           worker_answers,
+                                                                                           follow_up_questions,
+                                                                                           follow_up_answers)
+        print("Query for check worker exploitation:", query_for_check_worker_exploitation)
         response = self.check_worker_exploitation(
             questionnaire_schema,
             worker_answers,
@@ -69,24 +74,58 @@ class WorkflowManager:
         except requests.RequestException as e:
             print(f"Errore durante la chiamata a {url}: {e}")
             return {"error": str(e)}
+        
+    def get_query_for_check_worker_exploitation(self,
+                                                questionnaire_schema: dict,
+                                                worker_answers: dict,
+                                                follow_up_questions: list,
+                                                follow_up_answers: list):
+        print("Query rewriting through LLM..")
+        url = f"{self.flask_check_exploitation_url}/query_rewriting"
+        payload = {
+            "questionnaire_schema": questionnaire_schema,
+            "worker_answers": worker_answers,
+            'follow_up_questions': follow_up_questions,
+            'follow_up_answers': follow_up_answers
+        }
+        try:
+            response = requests.post(url, json=payload, timeout=30)
+            response.raise_for_status()
+            data = response.json()
+
+            if "rewritten_query" in data:
+                return data["rewritten_query"]
+            else:
+                print("⚠️ Risposta JSON inattesa dal server:", data)
+                return {"error": "Risposta JSON inattesa dal server"}
+
+        except requests.RequestException as e:
+            print(f"Errore durante la chiamata a {url}: {e}")
+            return {"error": str(e)}
 
     def simulate_completion_questionnaire(self, questionnaire):
         user_answers = {
             "answers": [
-                { "question_id": 1, "answer": "Mario" },
-                { "question_id": 2, "answer": "30" },
-                { "question_id": 3, "answer": "Italia" },
-                { "question_id": 4, "answer": "Milano" },
-                { "question_id": 5, "answer": "Pulizie" },
-                { "question_id": 6, "answer": "3 mesi" },
-                { "question_id": 7, "answer": "Sì" },
-                { "question_id": 8, "answer": "Agenzia" },
-                { "question_id": 9, "answer": "9" },
-                { "question_id": 10, "answer": "6" },
-                { "question_id": 11, "answer": "07:00 - 17:00" },
-                { "question_id": 13, "answer": "900" },
+                { "question_id": 1, "answer": "Abdou" },
+                { "question_id": 2, "answer": "27" },
+                { "question_id": 3, "answer": "Senegal" },
+                { "question_id": 4, "answer": "Provincia di Foggia" },
+                { "question_id": 5, "answer": "Raccolta pomodori" },
+                { "question_id": 6, "answer": "1 anno" },
+                { "question_id": 7, "answer": "No" },
+                { "question_id": 8, "answer": "Nessuno / a giornata" },
+                { "question_id": 9, "answer": "10" },
+                { "question_id": 10, "answer": "7" },
+                { "question_id": 11, "answer": "06:00 - 17:00" },
+                { "question_id": 12, "answer": "1 pausa di 30 minuti" },
+                { "question_id": 13, "answer": "700" },
                 { "question_id": 14, "answer": "Contanti" },
-                { "question_id": 15, "answer": "No"}
+                { "question_id": 15, "answer": "No" },
+                { "question_id": 16, "answer": "Sì, spesso la domenica" },
+                { "question_id": 17, "answer": "No" },
+                { "question_id": 18, "answer": "Sì, una volta al braccio" },
+                { "question_id": 19, "answer": "No, non mi hanno detto nulla" },
+                { "question_id": 20, "answer": "Ci trattano male, se parli troppo ti cacciano. Nessun controllo." }
             ]
         }
         return user_answers

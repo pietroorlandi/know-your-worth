@@ -9,7 +9,22 @@ rag = RAGEngine(
 )
 
 # Esegui la query
-query = "A chi si applica il CCNL per impiegati agricoli?"
+query_refinement_by_llm = """
+- Superamento del limite orario giornaliero e settimanale previsto dal CCNL agricolo per lavoro stagionale
+- Retribuzione globale mensile inferiore ai minimi tabellari previsti dal CCNL per operai agricoli
+- Assenza di contratto individuale scritto come richiesto dalla normativa e dal CCNL di settore
+- Pagamento in contanti in violazione dell’obbligo di tracciabilità retributiva
+- Mancato riconoscimento e pagamento delle ore di lavoro straordinario festivo e domenicale
+- Negazione del diritto alle ferie retribuite e ai riposi settimanali obbligatori
+- Inadeguata tutela contro gli infortuni e mancanza di copertura assicurativa obbligatoria INAIL
+- Condotte di pressione e intimidazione lesive dei diritti sindacali e della libertà di denuncia
+"""
+
+query = f"""
+Queste sono le condizioni riassuntive del lavoratore:
+{query_refinement_by_llm}
+
+Spiega in base ai documenti ottenuti, se e perché il lavoratore è sfruttato"""
 response = rag.query(query)
 
 print("\n🧠 Risposta RAG:")
