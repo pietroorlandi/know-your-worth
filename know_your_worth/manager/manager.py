@@ -57,6 +57,9 @@ class WorkflowManager:
         # self.module_4()
         return {"status": "completed", "worker_info": self.worker_info}
     
+    def elaborate(self):
+        # DA IMPLEMENTARE, vedi run
+    
     def get_questionnaire(self):
         url = f"{self.flask_questionnaire_url}/get_questionnaire"
         print(f"Chiamata a: {url}")
@@ -208,6 +211,13 @@ manager = WorkflowManager(config)
 def run_workflow():
     result = manager.run()
     return jsonify(result)
+
+
+@app.route('/elaborate_worker_condition', methods=['POST', 'GET'])
+def elaborate_worker_condition():
+    result = manager.elaborate()
+    return jsonify(result)
+
 
 if __name__ == '__main__':
     app.run(debug=True, host=manager.manager_ip, port=manager.manager_port)

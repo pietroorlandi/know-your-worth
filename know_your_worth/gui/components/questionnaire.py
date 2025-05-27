@@ -1,7 +1,9 @@
 import streamlit as st
+import requests
 from services.communication import APIService
 from utils.validation import validate_answer
 from utils.formatting import format_question_number
+
 
 def show_questionnaire():
     """Mostra il questionario dinamico"""
@@ -42,6 +44,7 @@ def show_questionnaire():
     # Mostra il questionario normale
     show_current_question()
     show_navigation_controls()
+
 
 def load_questions():
     """Carica le domande dal servizio API"""
@@ -224,58 +227,50 @@ def submit_questionnaire():
 
 def render_follow_up_questions():
     """Renderizza le domande di follow-up se presenti"""
+    if st.session_state.get("show_result", False):
+        elaboration_result = st.session_state.get("elaboration_result")
+        if elaboration_result:
+            st.success("🎯 Analisi della situazione completata!")
+            st.write(elaboration_result)
+
+        col1, col2 = st.columns([1, 1])
+        with col1:
+            if st.button("🔙 Torna indietro"):
+                cleanup_follow_up_state()
+                st.rerun()
+        return  # 👈 importante: non mostrare di nuovo le domande
     if st.session_state.get("show_follow_up", False) and "follow_up_questions" in st.session_state:
         follow_up_questions = st.session_state.follow_up_questions
-        
+
         st.markdown("""
         <div style="background-color: #FFF3CD; padding: 1.5rem; border-radius: 10px; margin: 2rem 0; border-left: 4px solid #FF6B6B;">
             <h4 style="color: #856404; margin: 0;">📝 Domande aggiuntive richieste</h4>
         </div>
         """, unsafe_allow_html=True)
-        
-        # Inizializza le risposte di follow-up se non esistono
-        if "follow_up_answers" not in st.session_state:
-            st.session_state.follow_up_answers = {}
-        
-        # Crea i campi per le risposte aggiuntive
+
         for i, question in enumerate(follow_up_questions):
             st.markdown(f"""
             <div style="background-color: #F8F9FA; padding: 1rem; border-radius: 8px; margin: 1rem 0;">
                 <h5 style="color: #2C3E50; margin-bottom: 0.5rem;">Domanda {i+1}</h5>
             </div>
             """, unsafe_allow_html=True)
-            
+
             key = f"follow_up_{i}"
-            current_value = st.session_state.follow_up_answers.get(key, "")
-            
-            answer = st.text_area(
+            current_value = st.session_state.get(key, "")
+
+            st.text_area(
                 question,
                 value=current_value,
-                key=f"input_{key}",  # Chiave unica per evitare conflitti
+                key=key,
                 height=120,
                 placeholder="Scrivi qui la tua risposta...",
                 help="Campo obbligatorio"
             )
-            
-            # Aggiorna il session state
-            st.session_state.follow_up_answers[key] = answer
-        
-        # Bottoni di controllo
-        col1, col2, col3 = st.columns([1, 1, 2])
-        
+
+        col1, col2, _ = st.columns([1, 1, 2])
         with col1:
             if st.button("📤 Invia Risposte", type="primary", use_container_width=True):
-                # Verifica che tutte le risposte siano state fornite
-                all_answered = all(
-                    st.session_state.follow_up_answers.get(f"follow_up_{i}", "").strip() 
-                    for i in range(len(follow_up_questions))
-                )
-                
-                if all_answered:
-                    submit_follow_up_answers()
-                else:
-                    st.error("⚠️ Per favore, rispondi a tutte le domande prima di inviare.")
-        
+                submit_follow_up_answers()
         with col2:
             if st.button("❌ Annulla", use_container_width=True):
                 cleanup_follow_up_state()
@@ -287,50 +282,30 @@ def submit_follow_up_answers():
     try:
         api_service = APIService()
         follow_up_questions = st.session_state.get("follow_up_questions", [])
-        
-        # Prepara le risposte aggiuntive
+
         additional_answers = {}
         for i, question in enumerate(follow_up_questions):
             key = f"follow_up_{i}"
-            if key in st.session_state.follow_up_answers:
-                additional_answers[question] = st.session_state.follow_up_answers[key]
-        
-        # Combina le risposte originali con quelle aggiuntive
-        all_answers = {**st.session_state.answers, **additional_answers}
-        
-        with st.spinner("Invio risposte aggiuntive..."):
-            result = api_service.submit_answers(st.session_state.questions, all_answers)
-        
-        # Controlla se c'è stato un errore nella richiesta
-        if "error" in result:
-            st.error(f"❌ {result['error']}")
+            if key in st.session_state:
+                additional_answers[question] = st.session_state[key]
+
+        if any(not v.strip() for v in additional_answers.values()):
+            st.warning("⚠️ Rispondi a tutte le domande prima di procedere.")
             return
-            
-        status = result.get("status")
-            
-        if status == "complete":
-            st.success("✅ Questionario completato con successo!")
-            st.balloons()
-            st.session_state.questionnaire_complete = True
-            
-            # Pulisci le risposte e domande di follow-up
-            cleanup_follow_up_state()
-            
-            # Ricarica la pagina per nascondere le domande di follow-up
-            st.rerun()
-            
-        elif status == "incomplete":
-            # Se ancora incompleto, aggiorna con le nuove domande
-            new_follow_up_questions = result.get("follow_up_questions", [])
-            if new_follow_up_questions:
-                st.session_state.follow_up_questions = new_follow_up_questions
-                # Resetta le risposte precedenti per le nuove domande
-                st.session_state.follow_up_answers = {}
-                st.warning("Sono necessarie ancora altre informazioni...")
-                st.rerun()
-                
+
+        with st.spinner("Elaborazione della tua situazione lavorativa..."):
+            elaboration_result = api_service.elaborate_worker_condition(
+                questionnaire_schema=st.session_state.questions,
+                worker_answers=st.session_state.answers,
+                follow_up_questions=follow_up_questions,
+                follow_up_answers=additional_answers
+            )
+            st.session_state.elaboration_result = elaboration_result
+            st.session_state.show_result = True  # 👈 nuovo flag
+
     except Exception as e:
         st.error(f"Errore nell'invio delle risposte aggiuntive: {str(e)}")
+
 
 
 def cleanup_follow_up_state():
