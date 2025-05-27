@@ -153,22 +153,137 @@ def is_last_question():
     return st.session_state.current_question_index == len(st.session_state.questions) - 1
 
 def submit_questionnaire():
-    """Invia il questionario"""
+    """Invia il questionario e gestisce la risposta del refinement"""
     try:
         api_service = APIService()
         
         with st.spinner("Invio questionario..."):
             result = api_service.submit_answers(st.session_state.questions, st.session_state.answers)
             
-        if result:
-            st.success("✅ Questionario inviato con successo!")
-            st.balloons()
-            # Qui potresti reindirizzare a una pagina di risultati
-        else:
-            st.error("❌ Errore nell'invio del questionario")
+        # Controlla se c'è stato un errore nella richiesta
+        if "error" in result:
+            st.error(f"❌ {result['error']}")
+            return
             
+        # Gestisci la risposta in base al status
+        status = result.get("status")
+        
+        if status == "complete":
+            # Questionario completo - mostra successo
+            st.success("✅ Questionario completato con successo!")
+            st.balloons()
+            
+            # Salva lo stato di completamento
+            st.session_state.questionnaire_complete = True
+            
+            # Opzionale: mostra un messaggio di completamento
+            st.info("🎉 Hai risposto a tutte le domande necessarie!")
+            
+            # Qui potresti reindirizzare a una pagina di risultati
+            # st.switch_page("results")
+            
+        elif status == "incomplete":
+            # Questionario incompleto - mostra domande di follow-up
+            follow_up_questions = result.get("follow_up_questions", [])
+            
+            if follow_up_questions:
+                st.warning("📝 Sono necessarie alcune informazioni aggiuntive:")
+                
+                # Mostra le domande di follow-up
+                st.subheader("Domande aggiuntive:")
+                
+                # Inizializza le risposte di follow-up se non esistono
+                if "follow_up_answers" not in st.session_state:
+                    st.session_state.follow_up_answers = {}
+                
+                # Crea i campi per le risposte aggiuntive
+                for i, question in enumerate(follow_up_questions):
+                    key = f"follow_up_{i}"
+                    st.session_state.follow_up_answers[key] = st.text_area(
+                        question, 
+                        value=st.session_state.follow_up_answers.get(key, ""),
+                        key=key
+                    )
+                
+                # Bottone per inviare le risposte aggiuntive
+                if st.button("Invia risposte aggiuntive", key="submit_follow_up"):
+                    submit_follow_up_answers(follow_up_questions)
+                    
+            else:
+                st.error("❌ Questionario incompleto ma nessuna domanda di follow-up ricevuta")
+        
+        else:
+            st.error(f"❌ Status non riconosciuto: {status}")
+                
     except Exception as e:
         st.error(f"Errore: {str(e)}")
+
+
+def submit_follow_up_answers(follow_up_questions):
+    """Invia le risposte alle domande di follow-up"""
+    try:
+        api_service = APIService()
+        
+        # Prepara le risposte aggiuntive
+        additional_answers = {}
+        for i, question in enumerate(follow_up_questions):
+            key = f"follow_up_{i}"
+            if key in st.session_state.follow_up_answers:
+                additional_answers[question] = st.session_state.follow_up_answers[key]
+        
+        # Combina le risposte originali con quelle aggiuntive
+        all_answers = {**st.session_state.answers, **additional_answers}
+        
+        with st.spinner("Invio risposte aggiuntive..."):
+            result = api_service.submit_answers(st.session_state.questions, all_answers)
+        
+        # Controlla se c'è stato un errore nella richiesta
+        if "error" in result:
+            st.error(f"❌ {result['error']}")
+            return
+            
+        status = result.get("status")
+            
+        if status == "complete":
+            st.success("✅ Questionario completato con successo!")
+            st.balloons()
+            st.session_state.questionnaire_complete = True
+            
+            # Pulisci le risposte di follow-up
+            if "follow_up_answers" in st.session_state:
+                del st.session_state.follow_up_answers
+            
+            # Ricarica la pagina per nascondere le domande di follow-up
+            st.rerun()
+            
+        elif status == "incomplete":
+            # Se ancora incompleto, ricomincia il processo
+            follow_up_questions = result.get("follow_up_questions", [])
+            st.warning("Sono necessarie ancora altre informazioni...")
+            # Il ciclo continuerà con le nuove domande
+                
+    except Exception as e:
+        st.error(f"Errore nell'invio delle risposte aggiuntive: {str(e)}")
+
+
+# Funzione helper per verificare se il questionario è completo
+def is_questionnaire_complete():
+    """Verifica se il questionario è stato completato"""
+    return st.session_state.get("questionnaire_complete", False)
+
+
+# Opzionale: funzione per resettare lo stato del questionario
+def reset_questionnaire():
+    """Resetta lo stato del questionario"""
+    keys_to_remove = [
+        "questionnaire_complete", 
+        "follow_up_answers"
+    ]
+    
+    for key in keys_to_remove:
+        if key in st.session_state:
+            del st.session_state[key]
+
 
 def confirm_exit():
     """Conferma l'uscita dal questionario"""

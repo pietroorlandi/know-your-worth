@@ -47,7 +47,7 @@ class APIService:
             st.error(f"Errore imprevisto: {str(e)}")
             return None
     
-    def submit_answers(self, questions: Dict, answers: Dict) -> bool:
+    def submit_answers(self, questions: Dict, answers: Dict) -> Dict:
         """Invia le risposte e lo schema del questionario al backend"""
         try:
             response = requests.post(
@@ -60,12 +60,25 @@ class APIService:
                 headers={"Content-Type": "application/json"}
             )
             
-            if response.status_code != 200:
-                st.error(f"Errore dal server: {response.json().get('error', 'Errore sconosciuto')}")
-            
-            return response.status_code == 200
-            
+            if response.status_code == 200:
+                # Restituisce i dati della risposta
+                return response.json()
+            else:
+                # In caso di errore, mostra l'errore e restituisce un dict con errore
+                error_msg = response.json().get('error', 'Errore sconosciuto')
+                st.error(f"Errore dal server: {error_msg}")
+                return {"error": error_msg, "status_code": response.status_code}
+                
+        except requests.exceptions.Timeout:
+            error_msg = "Timeout nella richiesta al server"
+            st.error(error_msg)
+            return {"error": error_msg}
+        except requests.exceptions.ConnectionError:
+            error_msg = "Errore di connessione al server"
+            st.error(error_msg)
+            return {"error": error_msg}
         except Exception as e:
-            st.error(f"Errore nell'invio: {str(e)}")
-            return False
+            error_msg = f"Errore nell'invio: {str(e)}"
+            st.error(error_msg)
+            return {"error": error_msg}
 
