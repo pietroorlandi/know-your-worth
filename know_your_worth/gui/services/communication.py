@@ -13,7 +13,7 @@ class APIService:
         # Configura l'URL base dal file di configurazione o variabili d'ambiente
         self.base_url_questionnaire_flask = self._get_base_url_questionnaire_flask()
         self.base_url_manager = self._get_base_url_manager_flask()
-        self.timeout = 30
+        self.timeout = 90
 
     def _get_base_url_manager_flask(self) -> str:
         """Ottiene l'URL base del backend"""

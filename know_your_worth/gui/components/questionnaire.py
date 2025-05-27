@@ -41,9 +41,19 @@ def show_questionnaire():
         render_follow_up_questions()
         return
     
+    if st.session_state.get("show_result", False):
+        show_final_result()
+        return
+    
     # Mostra il questionario normale
     show_current_question()
     show_navigation_controls()
+
+
+def show_final_result():
+    st.title("Cosa dovresti fare ora?")
+    st.markdown(st.session_state.elaboration_result, unsafe_allow_html=True)
+    return 
 
 
 def load_questions():
@@ -300,8 +310,9 @@ def submit_follow_up_answers():
                 follow_up_questions=follow_up_questions,
                 follow_up_answers=additional_answers
             )
-            st.session_state.elaboration_result = elaboration_result
+            st.session_state.elaboration_result = elaboration_result["generated_advice"]["advice"]
             st.session_state.show_result = True  # 👈 nuovo flag
+            st.rerun()
 
     except Exception as e:
         st.error(f"Errore nell'invio delle risposte aggiuntive: {str(e)}")
