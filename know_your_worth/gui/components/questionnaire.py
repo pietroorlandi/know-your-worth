@@ -158,7 +158,7 @@ def submit_questionnaire():
         api_service = APIService()
         
         with st.spinner("Invio questionario..."):
-            result = api_service.submit_answers(st.session_state.answers)
+            result = api_service.submit_answers(st.session_state.questions, st.session_state.answers)
             
         if result:
             st.success("✅ Questionario inviato con successo!")

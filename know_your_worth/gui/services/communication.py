@@ -1,20 +1,24 @@
 import requests
+import os
 import streamlit as st
 from typing import List, Dict, Optional
+
+from know_your_worth.utils.os_utils import read_yaml_file
+
 
 class APIService:
     """Servizio per gestire le chiamate API al backend Flask"""
     
     def __init__(self):
         # Configura l'URL base dal file di configurazione o variabili d'ambiente
-        self.base_url = self._get_base_url()
+        self.base_url_questionnaire_flask = self._get_base_url_questionnaire_flask()
         self.timeout = 30
     
-    def _get_base_url(self) -> str:
+    def _get_base_url_questionnaire_flask(self) -> str:
         """Ottiene l'URL base del backend"""
-        # Puoi configurare questo tramite st.secrets o variabili d'ambiente
+        config = read_yaml_file("configs.yaml")
         try:
-            return st.secrets.get("BACKEND_URL", "http://localhost:5001")
+            return f"http://{config['flask_questionnaire']['ip']}:{config['flask_questionnaire']['port']}"
         except:
             return "http://localhost:5001"
     
@@ -22,7 +26,7 @@ class APIService:
         """Ottiene le domande del questionario dal backend"""
         try:
             response = requests.get(
-                f"{self.base_url}/get_questionnaire",
+                f"{self.base_url_questionnaire_flask}/get_questionnaire",
                 timeout=self.timeout,
                 headers={"Content-Type": "application/json"}
             )
@@ -43,18 +47,25 @@ class APIService:
             st.error(f"Errore imprevisto: {str(e)}")
             return None
     
-    def submit_answers(self, answers: Dict) -> bool:
-        """Invia le risposte al backend"""
+    def submit_answers(self, questions: Dict, answers: Dict) -> bool:
+        """Invia le risposte e lo schema del questionario al backend"""
         try:
             response = requests.post(
-                f"{self.base_url}/api/submit-answers",
-                json={"answers": answers},
+                f"{self.base_url_questionnaire_flask}/refine_questionnaire",
+                json={
+                    "questionnaire_schema": questions,
+                    "user_answers": answers
+                },
                 timeout=self.timeout,
                 headers={"Content-Type": "application/json"}
             )
+            
+            if response.status_code != 200:
+                st.error(f"Errore dal server: {response.json().get('error', 'Errore sconosciuto')}")
             
             return response.status_code == 200
             
         except Exception as e:
             st.error(f"Errore nell'invio: {str(e)}")
             return False
+
