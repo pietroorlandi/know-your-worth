@@ -13,7 +13,8 @@ if args.target == "ccnl":
         db_dir="./index/ccnl",
         collection_name="ccnl",
         llm_api_key=os.getenv("SONAR_API_KEY"),
-        llm_model=os.getenv("SONAR_API_MODEL")
+        llm_model=os.getenv("SONAR_API_MODEL"),
+        openai_api_key=os.getenv("OPENAI_API_KEY"),
     )
     docs = SimpleDirectoryReader("data/ccnl").load_data()
     rag.ingest_documents(docs)

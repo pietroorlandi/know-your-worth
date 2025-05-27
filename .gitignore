@@ -9,6 +9,7 @@ env/
 venv/
 
 index/*
+index_hf/*
 
 # Distribution / packaging
 build/

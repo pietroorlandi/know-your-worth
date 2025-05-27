@@ -6,6 +6,7 @@ rag = RAGEngine(
     collection_name="ccnl",
     llm_api_key=os.getenv("SONAR_API_KEY"),
     llm_model=os.getenv("SONAR_API_MODEL"),
+    openai_api_key=os.getenv("OPENAI_API_KEY"),
 )
 
 # Esegui la query
