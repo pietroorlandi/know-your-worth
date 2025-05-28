@@ -1,22 +1,77 @@
-### 🧾 Know Your Worth – Empowering Workers in Italy
-**Know Your Worth** is a platform designed during a Perplexity Hackathon to help workers in Italy identify labor exploitation, compare their working conditions with CCNL contracts, and receive actionable guidance on how to protect their rights.
+# 🧾 KnowYourWorth – Empowering Workers in Italy
 
-### 🔍 Core Features
-- **Interactive Questionnaire** – Dynamically adapts to user input to gather work-related data.
+**KnowYourWorth** is a web platform developed to support workers—especially migrants, youth, and rural laborers—in identifying labor exploitation, verifying their employment conditions, and receiving personalized, actionable guidance.
 
-- **CCNL Contract Comparison (via RAG)** – Uses Retrieval Augmented Generation to check discrepancies between user input and official labor contract standards.
+Developed during a Perplexity Hackathon, the platform integrates AI-powered tools with structured legal knowledge to provide a virtual assistant-like experience, even for users with limited legal or digital literacy.
 
-- **Actionable Advice** – Step-by-step guidance with clear reasons and contact information (e.g., unions, legal aid).
+---
 
-- **PDF Generator** – Creates ready-to-send documents for unions or labor inspectors.
+## 🚀 Key Features
 
-### 🧠 Tech Stack
-- AI-powered Q&A and document generation using Perplexity Sonar API
+- **📋 Contract & Salary Check**  
+  Users can input their job role, contract type, and salary to automatically compare against official CCNL (National Collective Labor Agreements) standards using a Retrieval-Augmented Generation (RAG) system.
 
-- RAG system with custom CCNL knowledge base
+- **🧭 Decision Support Quiz**  
+  A guided decision-making quiz dynamically adapts to user responses and provides context-sensitive advice on whether and how to seek help.
 
-- Modular architecture for scalability and maintainability
+- **📝 Action Plan Generator**  
+  For at-risk cases, the system produces a customized document outlining next steps and relevant contacts (e.g., unions, labor inspectors).
 
-- Built with accessibility and simplicity in mind (mobile-first)
+- **🧠 AI-Powered Insights**  
+  User data is processed with AI-enhanced logic to improve recommendation relevance and legal accuracy while preserving privacy.
 
-Developed with Python 3.12.3
+---
+
+## 🛠️ Tech Stack
+
+- **Frontend**:  
+  Built using **Streamlit** for a fast, accessible, and mobile-friendly interface.
+
+- **Backend**:  
+  Developed with **Python 3.12.3** and **Flask**, enabling modular logic, secure user sessions, and on-demand document generation.
+
+- **RAG Pipeline**:  
+  - **LlamaIndex** for document indexing and query orchestration  
+  - **OpenAI Embeddings** for vector similarity search on CCNL clauses  
+  - Compatible with **Hugging Face** models for future self-hosted or multilingual support
+
+- **Perplexity API**:  
+  Used for intelligent input expansion, legal language simplification, and generating legally-aware advice through controlled prompting.
+
+
+---
+
+## 🧩 Architecture
+
+- **Modular Design**:  
+  Each feature is containerized and independently deployable for scalability and maintenance.
+
+- **Knowledge Base**:  
+  Legal texts (CCNLs) are preprocessed into a searchable index, supporting fast and transparent comparisons between user input and contract clauses.
+
+- **AI Layers**:  
+  Multi-step refinement pipeline combining user input → semantic enrichment → query generation → document retrieval → advice synthesis.
+
+---
+
+## ⚙️ Challenges Addressed
+
+- Bridging the complexity of Italian labor law with a simplified user experience.
+- Building a CCNL-based legal comparison engine from unstructured documents.
+- Designing inclusive UX flows for users unfamiliar with legal systems or digital tools.
+- Handling API rate limitations without compromising on performance or safety.
+
+---
+
+## 📈 Future Development
+
+- Sector-specific expansion (agriculture, logistics, hospitality)
+- Interactive **Statistics Dashboard** for aggregated, anonymized data insights
+- **Wage Benchmarking Tool** to contextualize salaries across regions and roles
+- Partnerships with unions and NGOs for field testing and feedback
+- **Anonymous reporting** and **encrypted session storage** for long-term user support
+
+---
+
+**KnowYourWorth** is more than an app—it's a digital ally for workers, promoting labor transparency and justice through ethical, inclusive AI.
+
