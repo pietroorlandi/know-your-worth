@@ -1,4 +1,4 @@
-from flask import Flask, jsonify
+from flask import Flask, request, jsonify
 import time
 import requests
 
@@ -57,6 +57,34 @@ class WorkflowManager:
         # self.module_4()
         return {"status": "completed", "worker_info": self.worker_info}
     
+    def elaborate(self,
+                  questionnaire_schema: dict,
+                  worker_answers: dict,
+                  follow_up_questions: list,
+                  follow_up_answers: list):
+        # DA IMPLEMENTARE, vedi run
+        query_for_check_worker_exploitation = self.get_query_for_check_worker_exploitation(questionnaire_schema,
+                                                                                           worker_answers,
+                                                                                           follow_up_questions,
+                                                                                           follow_up_answers)
+        print("Query for check worker exploitation:", query_for_check_worker_exploitation)
+        exploiment_worker_information = self.check_worker_exploitation(questionnaire_schema,
+                                                                        worker_answers,
+                                                                        follow_up_questions,
+                                                                        follow_up_answers)
+        print(f"exploiment_worker_information: {exploiment_worker_information}")
+        generated_advice = self.generate_advice(questionnaire_schema,
+                                                worker_answers,
+                                                follow_up_questions,
+                                                follow_up_answers,
+                                                exploiment_worker_information)
+        print("generated_advice:", generated_advice)
+        return {
+            "status": "completed",
+            "worker_info": self.worker_info,
+            "generated_advice": generated_advice}
+
+
     def get_questionnaire(self):
         url = f"{self.flask_questionnaire_url}/get_questionnaire"
         print(f"Chiamata a: {url}")
@@ -67,7 +95,7 @@ class WorkflowManager:
         except Exception as e:
             print("Errore durante il parsing JSON:", e)
             return {"error": str(e)}
-        
+
     def refine_questionnaire(self, questionnaire: dict, user_answers: dict):
         url = f"{self.flask_questionnaire_url}/refine_questionnaire"
         payload = {
@@ -81,7 +109,7 @@ class WorkflowManager:
         except requests.RequestException as e:
             print(f"Errore durante la chiamata a {url}: {e}")
             return {"error": str(e)}
-        
+
     def get_query_for_check_worker_exploitation(self,
                                                 questionnaire_schema: dict,
                                                 worker_answers: dict,
@@ -208,6 +236,25 @@ manager = WorkflowManager(config)
 def run_workflow():
     result = manager.run()
     return jsonify(result)
+
+
+@app.route('/elaborate_worker_condition', methods=['POST', 'GET'])
+def elaborate_worker_condition():
+    print("Entrato nel elaborate_worker_condition")
+    data = request.get_json()
+    questionnaire_schema = data.get("questionnaire_schema")
+    worker_answers = data.get("worker_answers")
+    follow_up_questions = data.get("follow_up_questions")
+    follow_up_answers = data.get("follow_up_answers")
+    result = manager.elaborate(
+        questionnaire_schema=questionnaire_schema,
+        worker_answers=worker_answers,
+        follow_up_questions=follow_up_questions,
+        follow_up_answers=follow_up_answers
+    )
+    print("Elaborazione eseguita")
+    return jsonify(result)
+
 
 if __name__ == '__main__':
     app.run(debug=True, host=manager.manager_ip, port=manager.manager_port)

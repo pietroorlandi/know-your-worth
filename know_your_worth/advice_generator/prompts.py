@@ -37,6 +37,9 @@ def get_prompt_advice_generator(
 
     ## STRATEGIA DI RISPOSTA
 
+    ### FORMATO DELLA RISPOSTA
+    Restituisci la risposta in formato markdown.
+
     ### STRUTTURA OBBLIGATORIA DELLA RISPOSTA:
 
     1. **RIEPILOGO SITUAZIONE** (2-3 frasi)
