@@ -4,7 +4,7 @@ File di configurazione per l'applicazione Streamlit
 
 # Configurazione API
 DEFAULT_BACKEND_URL = "http://localhost:5000"
-API_TIMEOUT = 30
+API_TIMEOUT = 60
 
 # Configurazione UI
 PAGE_TITLE = "Diritti del Lavoratore"
