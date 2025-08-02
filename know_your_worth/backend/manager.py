@@ -5,6 +5,7 @@ from flask import Flask, request, jsonify
 
 from llm.sonar_llm import SonarClient
 from rag.rag_engine import RAGEngine
+from interviewer.interviewer import Interviewer
 from questionnaire.questionnaire_refiner import QuestionnaireRefiner
 from worker_exploitation_checker.prompts import get_prompt_exploitation_checker, get_prompt_query_rewriting
 from advice_generator.prompts import get_prompt_advice_generator
@@ -27,12 +28,13 @@ class WorkflowManager:
         self.flask_generate_advice_ip = config["flask_advice_generator"]["host"]
         self.flask_generate_advice_port = config["flask_advice_generator"]["port"]
         self.flask_generate_advice_url = f"http://{self.flask_generate_advice_ip}:{self.flask_generate_advice_port}"
-        self._init_llm_clients()
+        self._init_components()
         self.questionnaire_refiner = QuestionnaireRefiner(llm_client=self.sonar_client)
 
     def _init_components(self):
         # Inizializza i componenti necessari, come il client LLM e il motore RAG
         self._init_llm_clients()
+        self.interviewer = Interviewer(llm_client=self.sonar_client)
         self.rag_engine_exploitation_checker = RAGEngine(
             db_dir="./index/ccnl",
             collection_name="ccnl",
@@ -116,6 +118,22 @@ class WorkflowManager:
     def refine_questionnaire(self, questionnaire: dict, user_answers: dict) -> dict:
         print("Refining questionnaire...")
         data = self.questionnaire_refiner.refine(questionnaire, user_answers)
+        return data
+    
+    def handle_conversation_for_more_info(self, form_data: dict, conversation_history: list) -> dict:
+        """
+        Gestisce la conversazione per ottenere ulteriori informazioni.
+        :param form_data: Dati del modulo inviato dall'utente.
+        :param conversation_history: Storico della conversazione.
+        :return: Un dizionario con la prossima domanda, la conversazione aggiornata e lo stato di completamento.
+        """
+        print("Handling conversation for more info...")
+        # Invia i dati al manager per gestire la logica con il LLM
+        data = self.interviewer.ask(
+            questionnaire_schema=form_data.get("questionnaire_schema"),
+            user_answers=form_data.get("worker_answers"),
+            conversation=conversation_history
+        )
         return data
 
     def get_query_for_check_worker_exploitation(self,
