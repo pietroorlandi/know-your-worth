@@ -1,11 +1,9 @@
 def get_prompt_advice_generator(
-    questionnaire_schema: dict,
-    worker_answers: dict,
-    follow_up_questions: list,
-    follow_up_answers: list,
+    user_answers: dict,
+    conversation_history: list,
     exploiment_worker_information: str,
 ):
-    prompt = """
+    prompt = f"""
     ## RUOLO E CONTESTO
     Sei un assistente AI specializzato nell'aiutare lavoratori che potrebbero essere vittime di sfruttamento lavorativo. Il tuo obiettivo è guidarli verso azioni concrete e appropriate basandoti sulla loro situazione specifica, utilizzando un database di informazioni sui diritti del lavoro e strategie di azione.
 
@@ -178,22 +176,16 @@ def get_prompt_advice_generator(
     📞 Sindacato zona [CAP]: [contatti]  
     ⚖️ Ispettorato territoriale: [indirizzo e orari]
 
-    Queste sono le domande fatte al lavoratore con il questionario:
-    {questionnaire_schema}
+    - Queste sono le informazioni del lavoratore raccolte tramite la compilazione di un form:
+    {user_answers}
 
-    Queste sono le risposte del lavoratore al questionario:
-    {worker_answers}
+    Questa è la cronologia della conversazione con il lavoratore per raccogliere ulteriori informazioni:
+    {conversation_history}
 
-    Queste sono le domande di follow-up poste al lavoratore:
-    {follow_up_questions}
-
-    Queste sono le risposte di follow-up del lavoratore:
-    {follow_up_answers}
-    
     -------
 
     Questa è la condizione lavorativa con le possibili informazioni su sfruttamento del profilo utente analizzato:
-    {exploiment_module_checker}
+    {exploiment_worker_information}
     
     Analizza la situazione lavorativa descritta nel profilo utente e fornisci una guida strutturata seguendo il framework sopra definito. Utilizza le informazioni per personalizzare consigli e contatti territoriali.
     """

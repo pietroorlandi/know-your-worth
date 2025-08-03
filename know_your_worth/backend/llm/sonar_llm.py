@@ -2,7 +2,7 @@ import instructor
 from openai import OpenAI
 from pydantic import BaseModel
 
-from know_your_worth.llm.llm import LLMClient
+from .llm import LLMClient
 
 
 class SonarClient(LLMClient):
