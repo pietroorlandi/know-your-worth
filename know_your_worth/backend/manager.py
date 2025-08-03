@@ -78,25 +78,16 @@ class WorkflowManager:
         return {"status": "completed", "worker_info": self.worker_info}
     
     def elaborate(self,
-                  questionnaire_schema: dict,
-                  worker_answers: dict,
-                  follow_up_questions: list,
-                  follow_up_answers: list):
-        # DA IMPLEMENTARE, vedi run
-        query_for_check_worker_exploitation = self.get_query_for_check_worker_exploitation(questionnaire_schema,
-                                                                                           worker_answers,
-                                                                                           follow_up_questions,
-                                                                                           follow_up_answers)
-        print("Query for check worker exploitation:", query_for_check_worker_exploitation)
-        exploiment_worker_information = self.check_worker_exploitation(questionnaire_schema,
-                                                                        worker_answers,
-                                                                        follow_up_questions,
-                                                                        follow_up_answers)
+                  user_answers: dict,
+                  conversation_history: list):
+        # query_for_check_worker_exploitation = self.get_query_for_check_worker_exploitation(user_answers,
+        #                                                                                    conversation_history)  # TODO: implementato, aggiungilo in futuro
+        # print("Query for check worker exploitation:", query_for_check_worker_exploitation)
+        exploiment_worker_information = self.check_worker_exploitation(user_answers,
+                                                                       conversation_history)
         print(f"exploiment_worker_information: {exploiment_worker_information}")
-        generated_advice = self.generate_advice(questionnaire_schema,
-                                                worker_answers,
-                                                follow_up_questions,
-                                                follow_up_answers,
+        generated_advice = self.generate_advice(user_answers,
+                                                conversation_history,
                                                 exploiment_worker_information)
         print("generated_advice:", generated_advice)
         return {
@@ -137,18 +128,14 @@ class WorkflowManager:
         return data
 
     def get_query_for_check_worker_exploitation(self,
-                                                questionnaire_schema: dict,
-                                                worker_answers: dict,
-                                                follow_up_questions: list,
-                                                follow_up_answers: list):
+                                                user_answers: dict,
+                                                conversation_history: list):
         print("Query rewriting through LLM..")
         try:
             # Generazione del prompt
             prompt = get_prompt_query_rewriting(
-                questionnaire_schema,
-                worker_answers,
-                follow_up_questions,
-                follow_up_answers
+                user_answers,
+                conversation_history
             )
             # Chiamata al client LLM
             response = self.sonar_client.ask(prompt)
@@ -182,17 +169,12 @@ class WorkflowManager:
                 self.worker_info[key] = "da compilare"
 
     def check_worker_exploitation(self,
-                                  questionnaire_schema: dict,
-                                  worker_answers: dict,
-                                  follow_up_questions: list,
-                                  follow_up_answers: list):
+                                user_answers: dict,
+                                conversation_history: list):
         print("Controllo sfruttamento lavoratore...")
-        prompt = get_prompt_exploitation_checker(
-                questionnaire_schema,
-                worker_answers,
-                follow_up_questions,
-                follow_up_answers
-            )
+        prompt = get_prompt_exploitation_checker(user_answers,
+                                                conversation_history)
+    
         try:
             result = self.rag_engine_exploitation_checker.query(prompt=prompt)
             print(f"result: {result} - type: {type(result)}")
@@ -207,38 +189,27 @@ class WorkflowManager:
             return jsonify({"error": "Errore interno del server"}), 500
         
     def generate_advice(self,
-                        questionnaire_schema: dict,
-                        worker_answers: dict,
-                        follow_up_questions: list,
-                        follow_up_answers: list,
-                        exploiment_worker_information: str
-                        ):
+                        user_answers: dict,
+                        conversation_history: list,
+                        exploiment_worker_information: str):
         try:
             print("Sto valutando come consigliare il lavoratore...")
             prompt = get_prompt_advice_generator(
-                questionnaire_schema,
-                worker_answers,
-                follow_up_questions,
-                follow_up_answers,
+                user_answers,
+                conversation_history,
                 exploiment_worker_information
             )
             # Chiamata al client LLM
             response = self.sonar_client.ask(prompt)
+            print(f"Consiglio ricevuto dal LLM: {response}")
+            print(f"type(response): {type(response)}")
             # Estrazione del contenuto dalla risposta
-            advice = ""
-            # Gestione di diversi tipi di risposta
-            if isinstance(response, str):
-                advice = response
-            elif hasattr(response, 'choices') and response.choices:
-                advice = response.choices[0].message.content
-            elif hasattr(response, 'content'):
-                advice = response.content
-            elif hasattr(response, 'message') and hasattr(response.message, 'content'):
-                advice = response.message.content
+            if hasattr(response, 'choices') and response.choices:
+                return response.choices[0].message.content
+            elif isinstance(response, str):
+                return response
             else:
-                # Fallback: converti in stringa
-                advice = str(response)
-            return jsonify({"advice": advice})
+                return str(response)
         except Exception as e:
             print(f"⚠️ Errore durante la chiamata a llm.ask: {str(e)}")
             print(f"🔍 Tipo di errore: {type(e)}")

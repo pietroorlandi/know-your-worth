@@ -4,6 +4,7 @@ import requests
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 from werkzeug.exceptions import BadRequest
+from requests import Response
 
 from dotenv import load_dotenv
 
@@ -107,22 +108,38 @@ def handle_message():
         return jsonify({"error": str(e)}), 500
 
 
+
 @app.route('/elaborate_worker_condition', methods=['POST', 'GET'])
 def elaborate_worker_condition():
     print("Entrato nel elaborate_worker_condition")
     data = request.get_json()
-    questionnaire_schema = data.get("questionnaire_schema")
-    worker_answers = data.get("worker_answers")
-    follow_up_questions = data.get("follow_up_questions")
-    follow_up_answers = data.get("follow_up_answers")
+    user_answers = data.get("user_answers")
+    conversation_history = data.get("conversation_history", [])
+
     result = manager.elaborate(
-        questionnaire_schema=questionnaire_schema,
-        worker_answers=worker_answers,
-        follow_up_questions=follow_up_questions,
-        follow_up_answers=follow_up_answers
+        user_answers=user_answers,
+        conversation_history=conversation_history,
     )
-    print("Elaborazione eseguita")
-    return jsonify(result)
+    print(f"Risultato elaborazione: {type(result)}")
+
+    # Gestione serializzazione come nelle altre route
+    # Se è un dataclass
+    if hasattr(result, "__dict__"):
+        return jsonify(result.__dict__)
+    # Se è un Pydantic model
+    elif hasattr(result, "dict"):
+        return jsonify(result.dict())
+    # Se è già un dict (es: in caso di errore gestito)
+    elif isinstance(result, dict):
+        return jsonify(result)
+    # Se è un oggetto Response di requests
+    elif isinstance(result, Response):
+        try:
+            return jsonify(result.json()), result.status_code
+        except Exception:
+            return result.text, result.status_code
+    else:
+        return jsonify({"error": "Unexpected result type"}), 500
 
 
 if __name__ == '__main__':
