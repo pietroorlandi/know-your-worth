@@ -1,6 +1,6 @@
 # 🧾 KnowYourWorth – Empowering Workers in Italy
 
-**KnowYourWorth** is a web platform developed to support workers—especially migrants, youth, and rural laborers—in identifying labor exploitation, verifying their employment conditions, and receiving personalized, actionable guidance.
+**KnowYourWorth** is a web platform developed to support workers, especially migrants, youth, and rural laborers in identifying labor exploitation, verifying their employment conditions, and receiving personalized, actionable guidance.
 
 Developed during a Perplexity Hackathon, the platform integrates AI-powered tools with structured legal knowledge to provide a virtual assistant-like experience, even for users with limited legal or digital literacy.
 
@@ -72,6 +72,10 @@ Developed during a Perplexity Hackathon, the platform integrates AI-powered tool
 - **Anonymous reporting** and **encrypted session storage** for long-term user support
 
 ---
+## Demo
+[![Guarda il video](https://img.youtube.com/vi/7feNQiUdOLs/0.jpg)](https://www.youtube.com/watch?v=7feNQiUdOLs)
 
-**KnowYourWorth** is more than an app—it's a digital ally for workers, promoting labor transparency and justice through ethical, inclusive AI.
+
+
+**KnowYourWorth** is more than an app: it's a digital ally for workers, promoting labor transparency and justice through ethical, inclusive AI.
 
